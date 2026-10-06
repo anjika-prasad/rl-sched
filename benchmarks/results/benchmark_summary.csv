@@ -1,0 +1,21 @@
+completed_count,total_time,avg_waiting_time,std_waiting_time,avg_turnaround_time,avg_response_time,cpu_utilization,throughput,jains_fairness,starvation_count,preemptions,context_switch_ticks,scheduler,name,workload
+35,2031,906.17,544.75,996.29,933.46,96.41,1.7233,0.6009,0,0,70,FCFS,FCFS,Static CPU-Bound
+35,2040,725.23,563.7,812.86,744.2,95.98,1.7157,0.769,0,8,78,SJF (SRTF),SJF (SRTF),Static CPU-Bound
+35,2472,1447.49,389.67,1894.14,84.03,79.21,1.4159,0.9844,0,443,513,Round Robin (q=4),Round Robin (q=4),Static CPU-Bound
+35,2256,1429.37,386.13,1696.2,221.69,86.79,1.5514,0.9758,0,227,297,RLBMCS / Dyn-RR (Lit. Baseline),RLBMCS / Dyn-RR (Lit. Baseline),Static CPU-Bound
+35,2686,1168.2,506.44,1701.0,62.71,72.9,1.3031,0.948,0,657,727,RL-Sched (Proposed),RL-Sched (Proposed),Static CPU-Bound
+35,875,308.86,184.07,457.46,367.94,76.69,4.0,0.7162,0,0,169,FCFS,FCFS,Static I/O-Bound
+35,959,249.23,185.63,407.91,283.37,69.97,3.6496,0.8315,0,58,227,SJF (SRTF),SJF (SRTF),Static I/O-Bound
+35,922,478.2,102.57,715.66,71.57,72.78,3.7961,0.9834,0,66,235,Round Robin (q=4),Round Robin (q=4),Static I/O-Bound
+35,1052,487.49,96.72,829.74,50.29,63.78,3.327,0.9828,0,199,368,RLBMCS / Dyn-RR (Lit. Baseline),RLBMCS / Dyn-RR (Lit. Baseline),Static I/O-Bound
+35,922,474.03,104.14,710.34,70.46,72.78,3.7961,0.985,0,66,235,RL-Sched (Proposed),RL-Sched (Proposed),Static I/O-Bound
+40,1505,703.4,365.21,811.88,731.92,90.56,2.6578,0.6624,0,0,126,FCFS,FCFS,Static Mixed
+40,1529,389.07,352.15,522.52,441.65,89.14,2.6161,0.8688,3,40,166,SJF (SRTF),SJF (SRTF),Static Mixed
+40,1753,819.23,276.87,1116.22,88.45,77.75,2.2818,0.905,0,264,390,Round Robin (q=4),Round Robin (q=4),Static Mixed
+40,1673,821.08,273.96,1078.5,119.45,81.47,2.3909,0.8948,0,184,310,RLBMCS / Dyn-RR (Lit. Baseline),RLBMCS / Dyn-RR (Lit. Baseline),Static Mixed
+40,1776,557.77,399.79,763.75,214.2,76.75,2.2523,0.8592,0,287,413,RL-Sched (Proposed),RL-Sched (Proposed),Static Mixed
+70,2203,1061.1,416.63,1214.39,1146.64,89.83,3.1775,0.4948,0,0,215,FCFS,FCFS,Dynamic Shift
+70,2292,523.16,537.74,709.24,604.41,86.34,3.0541,0.815,5,88,303,SJF (SRTF),SJF (SRTF),Dynamic Shift
+70,2560,1222.47,465.29,1638.5,155.83,77.3,2.7344,0.8878,0,357,572,Round Robin (q=4),Round Robin (q=4),Dynamic Shift
+70,2492,1234.91,444.05,1618.59,193.7,79.41,2.809,0.8702,0,289,504,RLBMCS / Dyn-RR (Lit. Baseline),RLBMCS / Dyn-RR (Lit. Baseline),Dynamic Shift
+70,2535,892.6,585.95,1176.17,232.59,78.07,2.7613,0.8838,0,332,547,RL-Sched (Proposed),RL-Sched (Proposed),Dynamic Shift
