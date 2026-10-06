@@ -27,7 +27,7 @@ Classical CPU scheduling algorithms rely on static heuristics chosen at design t
 
 ### State Space $\mathcal{S}$ ($|\mathcal{S}| = 81$)
 The scheduler inspects continuous system telemetry at discrete decision intervals and maps it into a 4-feature discrete state index:
-1. **CPU Utilization**: $\text{Low} (< 40\%)$, $\text{Medium} (40\%\text{--}80\%)$, $\text{High} (> 80\%)$
+1. **CPU Utilization**: $\text{Low} (< 40\%) $, $\text{Medium} (40\%\text{--}80\%) $, $\text{High} (> 80\%) $
 2. **Ready Queue Contention**: $\text{Short} (\le 2)$, $\text{Medium} (3\text{--}6)$, $\text{Long} (> 6)$
 3. **Average Burst Estimate**: $\text{Short} (< 6)$, $\text{Medium} (6\text{--}15)$, $\text{Long} (> 15)$
 4. **I/O-to-CPU Ratio**: $\text{Low} (< 25\%)$, $\text{Balanced} (25\%\text{--}60\%)$, $\text{High} (> 60\%)$
