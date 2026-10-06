@@ -212,12 +212,23 @@ with tab_gantt:
     st.subheader("Process CPU Execution Timeline (Gantt Chart)")
     selected_sched = st.selectbox("Select Scheduler to Inspect", [s.name for s in schedulers], index=4)
     sim_obj = run_records[selected_sched]["sim"]
-    max_t = st.slider("Timeline Horizon (Clock Ticks)", min_value=50, max_value=min(600, sim_obj.current_time), value=160, step=10)
+    horizon_max = max(60, min(600, sim_obj.current_time))
+    default_horizon = min(160, horizon_max)
+    max_t = st.slider("Timeline Horizon (Clock Ticks)", min_value=30, max_value=horizon_max, value=default_horizon, step=10)
 
-    fig, ax = plt.subplots(figsize=(12, 3.5))
-    plot_gantt_chart(sim_obj.timeline, max_ticks=max_t)
-    st.pyplot(fig)
-    plt.close()
+    fig = plot_gantt_chart(sim_obj.timeline, max_ticks=max_t)
+    if fig is not None:
+        st.pyplot(fig)
+        plt.close(fig)
+    else:
+        st.info("No timeline events to display within the selected horizon.")
+
+    with st.expander("📋 View Raw Execution Events Table"):
+        events_df = pd.DataFrame([e for e in sim_obj.timeline if e["start"] < max_t])
+        if not events_df.empty:
+            events_df["duration"] = events_df["end"] - events_df["start"]
+            events_df["label"] = events_df.apply(lambda r: f"Process P{int(r['pid'])}" if pd.notnull(r['pid']) else r['type'], axis=1)
+            st.dataframe(events_df[["start", "end", "duration", "type", "label"]], use_container_width=True)
 
 with tab_adapt:
     st.subheader("Dynamic Parameter Adaptation History")
@@ -249,10 +260,10 @@ with tab_adapt:
 with tab_qtable:
     st.subheader("Tabular Q-Learning Policy Heatmap & State Inspector")
     st.markdown("Unlike black-box Deep RL, RL-Sched's tabular Q-table is **100% transparent and inspectable**.")
-    fig_heat, ax_heat = plt.subplots(figsize=(8, 5))
-    plot_q_table_heatmap(agent)
-    st.pyplot(fig_heat)
-    plt.close()
+    fig_heat = plot_q_table_heatmap(agent)
+    if fig_heat is not None:
+        st.pyplot(fig_heat)
+        plt.close(fig_heat)
 
     st.markdown("#### State Lookup & Action Decoder")
     test_cpu = st.selectbox("Observed CPU Utilization", ["Low (<40%)", "Med (40-80%)", "High (>80%)"], index=1)

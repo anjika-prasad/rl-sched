@@ -168,7 +168,11 @@ def plot_dynamic_adaptation(
         plt.show()
 
 
-def plot_q_table_heatmap(agent, save_path: Optional[str] = None):
+def plot_q_table_heatmap(
+    agent,
+    save_path: Optional[str] = None,
+    ax: Optional[plt.Axes] = None
+) -> Optional[plt.Figure]:
     """
     Visualizes the Q-table policy: for each state, what is the chosen action
     and what are the expected rewards?
@@ -186,15 +190,18 @@ def plot_q_table_heatmap(agent, save_path: Optional[str] = None):
     action_grid = np.zeros((3, 3), dtype=int)
     for cpu_bin in range(3):
         for qlen_bin in range(3):
-            # Sample across burst and IO bins
             indices = [cpu_bin * 27 + qlen_bin * 9 + b * 3 + io for b in range(3) for io in range(3)]
             sub_actions = best_actions[indices]
-            # Mode action
             values, counts = np.unique(sub_actions, return_counts=True)
             mode_action = values[np.argmax(counts)]
             action_grid[cpu_bin, qlen_bin] = mode_action
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+    else:
+        fig = ax.figure
+
     im = ax.imshow(action_grid, cmap="YlGnBu", aspect="auto")
 
     cpu_labels = ["Low CPU (<40%)", "Med CPU (40-80%)", "High CPU (>80%)"]
@@ -216,24 +223,33 @@ def plot_q_table_heatmap(agent, save_path: Optional[str] = None):
             text = f"q = {q_val}\nalpha = {alpha_val}"
             ax.text(j, i, text, ha="center", va="center", color="black", fontweight="bold", fontsize=10)
 
-    plt.tight_layout()
     if save_path:
+        plt.tight_layout()
         plt.savefig(save_path, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+        plt.close(fig)
+        return None
+    return fig
 
 
-def plot_gantt_chart(timeline: List[Dict[str, Any]], max_ticks: int = 150, save_path: Optional[str] = None):
+def plot_gantt_chart(
+    timeline: List[Dict[str, Any]],
+    max_ticks: int = 150,
+    save_path: Optional[str] = None,
+    ax: Optional[plt.Axes] = None
+) -> Optional[plt.Figure]:
     """
     Renders an execution Gantt chart showing process scheduling, context switches, and CPU idle periods.
     """
     set_paper_style()
     filtered = [e for e in timeline if e["start"] < max_ticks]
     if not filtered:
-        return
+        return None
 
-    fig, ax = plt.subplots(figsize=(14, 4))
+    fig = None
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(14, 4))
+    else:
+        fig = ax.figure
     
     # Assign colors to PIDs
     unique_pids = sorted(list({e["pid"] for e in filtered if e["pid"] is not None}))
@@ -276,9 +292,9 @@ def plot_gantt_chart(timeline: List[Dict[str, Any]], max_ticks: int = 150, save_
     ]
     ax.legend(handles=legend_elements, loc="upper right")
 
-    plt.tight_layout()
     if save_path:
+        plt.tight_layout()
         plt.savefig(save_path, bbox_inches="tight")
-        plt.close()
-    else:
-        plt.show()
+        plt.close(fig)
+        return None
+    return fig
