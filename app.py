@@ -194,7 +194,7 @@ agent = load_or_train_agent()
 st.markdown("""
 <div class="hero">
   <div class="hero-badge">Research Project · Tabular Q-Learning</div>
-  <h1>⚡ RL-Sched</h1>
+  <h1> RL-Sched</h1>
   <p>An adaptive CPU scheduler that learns to tune its own time quantum and aging rate
   in real time — benchmarked against FCFS, SJF, Round Robin, and published RLBMCS.</p>
 </div>
