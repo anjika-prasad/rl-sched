@@ -168,60 +168,48 @@ def plot_dynamic_adaptation(
         plt.show()
 
 
-def plot_q_table_heatmap(
-    agent,
-    save_path: Optional[str] = None,
-    ax: Optional[plt.Axes] = None
-) -> Optional[plt.Figure]:
-    """
-    Visualizes the Q-table policy: for each state, what is the chosen action
-    and what are the expected rewards?
-    Proves interpretability for paper reviewers.
-    """
+def plot_q_table_heatmap(agent, save_path=None, ax=None):
     set_paper_style()
     q_table = agent.q_table
-    best_actions = np.argmax(q_table, axis=1)
-
-    # Decode action parameters into strings
-    action_labels = [f"q={a[0]}, a={a[1]}" for a in agent.actions]
-
-    # Create summary grid of best actions: (CPU util x Queue length)
-    # We aggregate across burst estimate and IO ratio for a readable 2D representation
-    action_grid = np.zeros((3, 3), dtype=int)
-    for cpu_bin in range(3):
-        for qlen_bin in range(3):
-            indices = [cpu_bin * 27 + qlen_bin * 9 + b * 3 + io for b in range(3) for io in range(3)]
-            sub_actions = best_actions[indices]
-            values, counts = np.unique(sub_actions, return_counts=True)
-            mode_action = values[np.argmax(counts)]
-            action_grid[cpu_bin, qlen_bin] = mode_action
-
-    fig = None
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6))
+    visits = getattr(agent, "visits", None)
+    if visits is not None:
+        visited = np.asarray(visits) > 0
     else:
-        fig = ax.figure
+        visited = np.any(q_table != 0, axis=1)
 
-    im = ax.imshow(action_grid, cmap="YlGnBu", aspect="auto")
+    best_actions = np.argmax(q_table, axis=1)  # fine on its own, just needs masking downstream
 
-    cpu_labels = ["Low CPU (<40%)", "Med CPU (40-80%)", "High CPU (>80%)"]
-    q_labels = ["Short Queue (<=2)", "Med Queue (3-6)", "Long Queue (>6)"]
+    n = 9
+    grid_q = np.full((n, n), np.nan)
+    labels = np.empty((n, n), dtype=object)
+    for s in range(81):
+        cpu, rem = divmod(s, 27)
+        qlen, rem2 = divmod(rem, 9)
+        burst, io = divmod(rem2, 3)
+        row, col = cpu * 3 + qlen, burst * 3 + io
+        if visited[s]:
+            q_val, alpha_val = agent.get_action_params(best_actions[s])
+            grid_q[row, col] = q_val
+            labels[row, col] = f"q={q_val}\nα={alpha_val}"
+        else:
+            labels[row, col] = "no data"
 
-    ax.set_xticks(range(3))
-    ax.set_yticks(range(3))
-    ax.set_xticklabels(q_labels)
-    ax.set_yticklabels(cpu_labels)
+    fig, ax = (plt.subplots(figsize=(13, 13)) if ax is None else (ax.figure, ax))
+    masked = np.ma.masked_invalid(grid_q)
+    cmap = plt.get_cmap("YlGnBu").copy()
+    cmap.set_bad("#d9d9d9")
+    im = ax.imshow(masked, cmap=cmap, aspect="auto")
+
+    for r in range(n):
+        for c in range(n):
+            ax.text(c, r, labels[r, c], ha="center", va="center",
+                     fontsize=8, fontweight="bold",
+                     color="black" if np.isnan(grid_q[r, c]) else "white")
+
     ax.set_title("RL-Sched Learned Policy Mapping (State -> Action)", fontweight="bold")
-    ax.set_xlabel("Ready Queue Contention")
-    ax.set_ylabel("CPU Load")
-
-    # Annotate cells with parameter decisions
-    for i in range(3):
-        for j in range(3):
-            act_idx = action_grid[i, j]
-            q_val, alpha_val = agent.get_action_params(act_idx)
-            text = f"q = {q_val}\nalpha = {alpha_val}"
-            ax.text(j, i, text, ha="center", va="center", color="black", fontweight="bold", fontsize=10)
+    ax.set_xticks(range(n)); ax.set_yticks(range(n))
+    ax.set_xticklabels([f"B{b} I{i}" for b in range(3) for i in range(3)], rotation=45, ha="right")
+    ax.set_yticklabels([f"C{c} Q{q}" for c in range(3) for q in range(3)])
 
     if save_path:
         plt.tight_layout()
