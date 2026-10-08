@@ -44,6 +44,7 @@ class QLearningAgent:
         # State space: 3 * 3 * 3 * 3 = 81 states
         self.num_states = 81
         self.q_table = np.zeros((self.num_states, self.num_actions), dtype=float)
+        self.visits = np.zeros(self.num_states, dtype=int)
 
     def discretize_state(self, telemetry: Dict[str, float]) -> int:
         """
@@ -138,6 +139,7 @@ class QLearningAgent:
         td_target = reward + self.gamma * best_next_q
         td_error = td_target - self.q_table[state, action]
         self.q_table[state, action] += lr_to_use * td_error
+        self.visits[state] += 1
         return float(abs(td_error))
 
     def decay_epsilon(self):
@@ -155,7 +157,8 @@ class QLearningAgent:
             "epsilon": self.epsilon,
             "lr": self.lr,
             "gamma": self.gamma,
-            "actions": self.actions
+            "actions": self.actions,
+            "visits": self.visits.tolist()
         }
         with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
@@ -168,3 +171,4 @@ class QLearningAgent:
         self.epsilon = data.get("epsilon", self.epsilon_min)
         self.lr = data.get("lr", self.lr)
         self.gamma = data.get("gamma", self.gamma)
+        self.visits = np.array(data.get("visits", [0] * self.num_states), dtype=int)

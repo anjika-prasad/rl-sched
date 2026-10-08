@@ -195,7 +195,7 @@ def main():
     adaptation_history = rl_run["res"].get("adaptation_history", [])
     adaptation_plot_path = os.path.join(out_dir, "dynamic_adaptation_curve.png")
     # Identify shift times roughly from workload
-    plot_dynamic_adaptation(adaptation_history, shift_ticks=[300, 550], save_path=adaptation_plot_path)
+    plot_dynamic_adaptation(adaptation_history, shift_ticks=[dynamic_workload[20].arrival_time, dynamic_workload[50].arrival_time], save_path=adaptation_plot_path)
     print(f"[+] Exported dynamic adaptation curve to {adaptation_plot_path}")
 
     # Gantt Chart for RL-Sched Execution

@@ -5,6 +5,7 @@ A Reinforcement Learning-Based Adaptive CPU Scheduler for Dynamic Workloads.
 Run with:  streamlit run app.py
 """
 
+import copy
 import os
 import sys
 import streamlit as st
@@ -32,6 +33,7 @@ from rlsched.q_learning import QLearningAgent
 from rlsched.rl_scheduler import RLScheduler
 from rlsched.metrics import evaluate_simulation
 from rlsched.visualizer import plot_q_table_heatmap, plot_gantt_chart
+from rlsched.explain import render_explainer
 
 # ──────────────────────────────────────────────
 # PAGE CONFIG
@@ -171,11 +173,12 @@ st.markdown("""
 @st.cache_resource
 def load_or_train_agent():
     model_path = os.path.join("benchmarks", "results", "trained_agent.json")
-    agent = QLearningAgent(seed=42)
+    agent = QLearningAgent(learning_rate=0.15, discount_factor=0.90, epsilon=1.0,
+                           epsilon_min=0.05, epsilon_decay=0.985, seed=42)
     if os.path.exists(model_path):
         agent.load(model_path)
     else:
-        for ep in range(100):
+        for ep in range(250):
             wl = generate_static_mixed(num_processes=15, seed=100 + ep)
             sim = Simulator(wl, context_switch_cost=1)
             sched = RLScheduler(agent, decision_interval=8, training=True)
@@ -257,12 +260,13 @@ else:
 # RESULTS
 # ──────────────────────────────────────────────
 if run_btn:
+    run_agent = copy.deepcopy(agent)  # online learning must not modify the shared agent
     schedulers = [
         FCFSScheduler(),
         SJFScheduler(),
         RoundRobinScheduler(time_quantum=4),
         RLBMCS_AdaptiveRRScheduler(),
-        RLScheduler(agent, decision_interval=decision_interval,
+        RLScheduler(run_agent, decision_interval=decision_interval,
                     training=False, online_learning=online_mode, online_lr=online_lr),
     ]
 
@@ -400,17 +404,17 @@ if run_btn:
         "avg_waiting_time": "Avg Wait (ticks)",
         "avg_turnaround_time": "Avg TAT (ticks)",
         "jains_fairness": "Jain's Fairness",
-        "throughput": "Throughput (%/tick)",
+        "throughput": "Throughput (per 100 ticks)",
         "cpu_utilization": "CPU Util (%)",
         "starvation_count": "Starvations",
         "context_switch_ticks": "CS Overhead (ticks)",
     })
     styled = display_df.style \
         .highlight_min(subset=["Avg Wait (ticks)", "Avg TAT (ticks)", "Starvations", "CS Overhead (ticks)"], color="#d1fae5") \
-        .highlight_max(subset=["Jain's Fairness", "CPU Util (%)", "Throughput (%/tick)"], color="#d1fae5") \
+        .highlight_max(subset=["Jain's Fairness", "CPU Util (%)", "Throughput (per 100 ticks)"], color="#d1fae5") \
         .format({"Avg Wait (ticks)": "{:.1f}", "Avg TAT (ticks)": "{:.1f}",
                  "Jain's Fairness": "{:.3f}", "CPU Util (%)": "{:.1f}",
-                 "Throughput (%/tick)": "{:.4f}"})
+                 "Throughput (per 100 ticks)": "{:.4f}"})
     st.dataframe(styled, use_container_width=True)
 
     # ── GANTT CHART ──
@@ -453,11 +457,12 @@ if run_btn:
             st.altair_chart(ca, use_container_width=True)
 
     # ── Q-TABLE HEATMAP ──
-    st.markdown('<div class="section-title">Q-Table Policy Heatmap (Interpretable RL)</div>', unsafe_allow_html=True)
-    fig_heat = plot_q_table_heatmap(agent)
-    if fig_heat is not None:
-        st.pyplot(fig_heat, use_container_width=True)
-        plt.close(fig_heat)
+    phase_starts = None
+    if workload_type == "Dynamic Phase Shift":
+        _p1 = max(5, num_processes // 3)
+        _p2 = max(5, num_processes // 2)
+        phase_starts = [workload[_p1].arrival_time, workload[_p1 + _p2].arrival_time]
+    render_explainer(run_agent, history, phase_starts)
 
 else:
     # ── LANDING PLACEHOLDER ──

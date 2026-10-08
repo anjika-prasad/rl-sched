@@ -85,6 +85,12 @@ class RLScheduler(BaseScheduler):
             + self.w_fairness * fairness
             - self.w_starve * starve_penalty
         )
+        self.last_parts = {
+            "wait": -self.w_wait * norm_wait_penalty,
+            "throughput": self.w_throughput * tp_reward,
+            "fairness": self.w_fairness * fairness,
+            "starvation": -self.w_starve * starve_penalty,
+        }
         return float(reward)
 
     def apply_aging_and_sort_queue(self, sim: Simulator):
@@ -156,7 +162,9 @@ class RLScheduler(BaseScheduler):
                     "state": current_state,
                     "cpu_util": telemetry["cpu_utilization"],
                     "queue_len": telemetry["ready_queue_length"],
-                    "avg_wait": telemetry["avg_current_wait"]
+                    "avg_wait": telemetry["avg_current_wait"],
+                    "q_values": self.agent.q_table[current_state].tolist(),
+                    "reward_parts": dict(getattr(self, "last_parts", {}))
                 })
 
             ticks_since_decision += 1
